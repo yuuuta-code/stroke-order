@@ -32,6 +32,7 @@ with sync_playwright() as p:
         expect(page.locator('.achievement-celebration')).to_have_count(1)
         record=page.evaluate("JSON.parse(localStorage.getItem('kanji-challenge-v1')).山")
         expect(page.locator('.score-number')).to_have_text(str(record['bestScore']))
+        expect(page.locator('.result-score')).to_have_accessible_name(f"{record['bestScore']} / 100点")
         assert record['bestRank']==rank
         if rank=='bronze':expect(page.locator('.personal-best-celebration')).to_have_count(0)
         else:expect(page.locator('.personal-best-celebration')).to_be_visible()
