@@ -50,7 +50,7 @@ with sync_playwright() as p:
         points = target.evaluate('''async c=>{
           const glyphs=await (await fetch('./data/glyphs.json')).json();
           const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');document.body.append(svg);
-          const strokes=glyphs[c].map(d=>{const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',d);svg.append(path);const length=path.getTotalLength();return Array.from({length:65},(_,i)=>{const p=path.getPointAtLength(length*i/64);return [p.x,p.y];});});svg.remove();return strokes;
+          const strokes=glyphs[c].map(d=>{const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',d);svg.append(path);const length=path.getTotalLength();return Array.from({length:33},(_,i)=>{const p=path.getPointAtLength(length*i/32);return [p.x,p.y];});});svg.remove();return strokes;
         }''',character)
         target.locator('#challenge-board').scroll_into_view_if_needed()
         box = target.locator('#challenge-board').bounding_box()
