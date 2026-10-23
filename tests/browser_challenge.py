@@ -123,6 +123,10 @@ with sync_playwright() as p:
     box=phone.locator('#challenge-board').bounding_box();x=box['x']+50;y=box['y']+50
     client.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
     client.send('Input.dispatchTouchEvent',{'type':'touchCancel','touchPoints':[]})
+    expect(phone.locator('#answer-ink polyline')).to_have_count(1)
+    expect(phone.locator('#grade')).to_be_disabled()
+    phone.wait_for_timeout(350)
+    phone.locator('#challenge-undo').tap()
     expect(phone.locator('#answer-ink polyline')).to_have_count(0)
     phone.goto(URL+'#collection')
     assert phone.evaluate("JSON.parse(localStorage.getItem('kanji-challenge-v1')).山.attempts")==1
