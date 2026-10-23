@@ -1,3 +1,4 @@
+import { achievementMarkup, animateResultScore } from './achievements.js';
 import { scoreAttempt } from './scoring.js';
 import { recordAttempt, rankNames } from './records.js';
 
@@ -8,6 +9,7 @@ export function mountChallenge({ app, word, wordIndex, charIndex, paths, records
   const character = [...word.word][charIndex];
   const previous = records[character];
   let submitted = false, active = null, strokes = [];
+  let stopScoreAnimation = () => {};
   app.innerHTML = `<section class="challenge-page"><a class="back-link" href="#practice/${wordIndex}/${charIndex}">← 練習に戻る</a>
     <div class="challenge-heading"><p class="eyebrow">NO HINT CHALLENGE</p><h1>「${escape(word.reading)}」の${charIndex + 1}文字目</h1><p>見本なしで、覚えた漢字を書いてみましょう。</p></div>
     <div class="challenge-layout"><div class="practice-workspace">
@@ -96,12 +98,14 @@ export function mountChallenge({ app, word, wordIndex, charIndex, paths, records
     board.parentElement.classList.remove('challenge-drawing-surface');
     const difference = record.previous === null ? '最初のスコアを記録しました' : result.score > record.previous ? `自己ベストを${result.score - record.previous}点更新！` : `自己ベスト ${record.previous}点 ／ ベストとの差 ${result.score - record.previous}点`;
     const hasNext = charIndex + 1 < [...word.word].length;
-    select('challenge-aside').innerHTML = `<div class="result-card ${record.improved ? 'new-record' : ''}" tabindex="-1" role="region" aria-label="採点結果"><p class="eyebrow">お手本との一致度</p><div class="result-score">${result.score}<span> / 100点</span></div><div class="result-verdict ${result.passed ? result.rank : 'retry'}">${result.passed ? `合格！ ${rankNames[result.rank]}メダル` : '今回は未合格・再挑戦'}</div><p class="record-message">${escape(difference)}</p><h2>答えは「${character}」</h2><p class="result-feedback">${escape(result.feedback)}</p><ul class="result-checks"><li>${result.countOK ? '✓' : '△'} 画数</li><li>${result.directionOK ? '✓' : '△'} 書き順・方向</li><li>${result.shapeOK ? '✓' : '△'} 形・位置</li></ul><p class="small-note">80点以上かつ、全画で画数・順番・方向・形の条件を満たすと合格です。条件が未達の場合は最高79点です。</p><button id="challenge-retry" class="primary">もう一度挑戦 →</button><a class="secondary" href="#practice/${wordIndex}/${charIndex}">練習に戻る</a><a class="next-character" href="${hasNext ? `#challenge/${wordIndex}/${charIndex + 1}` : '#collection'}">${hasNext ? '次の文字に挑戦 →' : '合格コレクションを見る →'}</a><p class="small-note" role="status">${record.saved ? 'このブラウザに記録しました。' : '記録を保存できません。このページを閉じると今回の記録が消えます。'}</p></div>`;
+    select('challenge-aside').innerHTML = `<div class="result-card ${record.improved ? 'new-record' : ''}" tabindex="-1" role="region" aria-label="採点結果">${achievementMarkup({ passed: result.passed, rank: result.rank, score: result.score, previous: record.previous })}<p class="eyebrow result-score-label">お手本との一致度</p><div class="result-score" aria-label="${result.score} / 100点"><span class="score-number" aria-hidden="true">${result.score}</span><span aria-hidden="true"> / 100点</span></div><div class="result-verdict ${result.passed ? result.rank : 'retry'}">${result.passed ? `合格！ ${rankNames[result.rank]}メダル` : '今回は未合格・再挑戦'}</div><p class="record-message">${escape(difference)}</p><h2>答えは「${character}」</h2><p class="result-feedback">${escape(result.feedback)}</p><ul class="result-checks"><li>${result.countOK ? '✓' : '△'} 画数</li><li>${result.directionOK ? '✓' : '△'} 書き順・方向</li><li>${result.shapeOK ? '✓' : '△'} 形・位置</li></ul><p class="small-note">80点以上かつ、全画で画数・順番・方向・形の条件を満たすと合格です。条件が未達の場合は最高79点です。</p><button id="challenge-retry" class="primary">もう一度挑戦 →</button><a class="secondary" href="#practice/${wordIndex}/${charIndex}">練習に戻る</a><a class="next-character" href="${hasNext ? `#challenge/${wordIndex}/${charIndex + 1}` : '#collection'}">${hasNext ? '次の文字に挑戦 →' : '合格コレクションを見る →'}</a><p class="small-note" role="status">${record.saved ? 'このブラウザに記録しました。' : '記録を保存できません。このページを閉じると今回の記録が消えます。'}</p></div>`;
+    stopScoreAnimation = animateResultScore(select('challenge-aside').querySelector('.score-number'), result.score);
     select('challenge-retry').addEventListener('click', retry);
     select('challenge-aside').querySelector('.result-card').focus({ preventScroll: true });
-    select('challenge-aside').scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    select('challenge-aside').scrollIntoView({ block: 'start', behavior: 'instant' });
   });
   return () => {
+    stopScoreAnimation();
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', finish);
     window.removeEventListener('pointercancel', interrupt);
